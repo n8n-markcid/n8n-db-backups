@@ -1227,6 +1227,32 @@ CREATE TABLE IF NOT EXISTS "public"."token_exchange_jti" (
 ALTER TABLE "public"."token_exchange_jti" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."trusted_key" (
+    "sourceId" character varying(36) NOT NULL,
+    "kid" character varying(255) NOT NULL,
+    "data" "text" NOT NULL,
+    "createdAt" timestamp(3) with time zone DEFAULT CURRENT_TIMESTAMP(3) NOT NULL
+);
+
+
+ALTER TABLE "public"."trusted_key" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."trusted_key_source" (
+    "id" character varying(36) NOT NULL,
+    "type" character varying(32) NOT NULL,
+    "config" "text" NOT NULL,
+    "status" character varying(32) DEFAULT 'pending'::character varying NOT NULL,
+    "lastError" "text",
+    "lastRefreshedAt" timestamp(3) with time zone,
+    "createdAt" timestamp(3) with time zone DEFAULT CURRENT_TIMESTAMP(3) NOT NULL,
+    "updatedAt" timestamp(3) with time zone DEFAULT CURRENT_TIMESTAMP(3) NOT NULL
+);
+
+
+ALTER TABLE "public"."trusted_key_source" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."user" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "email" character varying(255),
@@ -1401,7 +1427,7 @@ ALTER TABLE "public"."workflow_history" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."workflow_publish_history" (
     "id" integer NOT NULL,
     "workflowId" character varying(36) NOT NULL,
-    "versionId" character varying(36) NOT NULL,
+    "versionId" character varying(36),
     "event" character varying(36) NOT NULL,
     "userId" "uuid",
     "createdAt" timestamp(3) with time zone DEFAULT CURRENT_TIMESTAMP(3) NOT NULL,
@@ -1710,6 +1736,11 @@ ALTER TABLE ONLY "public"."execution_annotation_tags"
 
 
 
+ALTER TABLE ONLY "public"."trusted_key_source"
+    ADD CONSTRAINT "PK_99e8908ce2c2cdccce487db7fc6" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."webhook_entity"
     ADD CONSTRAINT "PK_b21ace2e13596ccd87dc9bf4ea6" PRIMARY KEY ("webhookPath", "method");
 
@@ -1767,6 +1798,11 @@ ALTER TABLE ONLY "public"."token_exchange_jti"
 
 ALTER TABLE ONLY "public"."settings"
     ADD CONSTRAINT "PK_dc0fe14e6d9943f268e7b119f69ab8bd" PRIMARY KEY ("key");
+
+
+
+ALTER TABLE ONLY "public"."trusted_key"
+    ADD CONSTRAINT "PK_dc7d93798f3dbb6959f974c97e1" PRIMARY KEY ("sourceId", "kid");
 
 
 
@@ -2360,6 +2396,11 @@ ALTER TABLE ONLY "public"."instance_ai_iteration_logs"
 
 
 
+ALTER TABLE ONLY "public"."trusted_key"
+    ADD CONSTRAINT "FK_8c2938d746943dd8f608d23c891" FOREIGN KEY ("sourceId") REFERENCES "trusted_key_source"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."test_case_execution"
     ADD CONSTRAINT "FK_8e4b4774db42f1e6dda3452b2af" FOREIGN KEY ("testRunId") REFERENCES "test_run"("id") ON DELETE CASCADE;
 
@@ -2451,7 +2492,7 @@ ALTER TABLE ONLY "public"."oauth_refresh_tokens"
 
 
 ALTER TABLE ONLY "public"."workflow_publish_history"
-    ADD CONSTRAINT "FK_b4cfbc7556d07f36ca177f5e473" FOREIGN KEY ("versionId") REFERENCES "workflow_history"("versionId") ON DELETE CASCADE;
+    ADD CONSTRAINT "FK_b4cfbc7556d07f36ca177f5e473" FOREIGN KEY ("versionId") REFERENCES "workflow_history"("versionId") ON DELETE SET NULL;
 
 
 
@@ -3244,6 +3285,18 @@ GRANT ALL ON TABLE "public"."test_run" TO "service_role";
 GRANT ALL ON TABLE "public"."token_exchange_jti" TO "anon";
 GRANT ALL ON TABLE "public"."token_exchange_jti" TO "authenticated";
 GRANT ALL ON TABLE "public"."token_exchange_jti" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."trusted_key" TO "anon";
+GRANT ALL ON TABLE "public"."trusted_key" TO "authenticated";
+GRANT ALL ON TABLE "public"."trusted_key" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."trusted_key_source" TO "anon";
+GRANT ALL ON TABLE "public"."trusted_key_source" TO "authenticated";
+GRANT ALL ON TABLE "public"."trusted_key_source" TO "service_role";
 
 
 
